@@ -40,7 +40,7 @@ jobs:
         run: |
           SCAN_ID=$(nexploit-cli scan:run                                                 \
             --test csrf dom_xss header_security secret_tokens open_buckets                 \
-            --name "💎 BrokenCrystals for a '${GITHUB_REF##*/}' branch #${GITHUB_RUN_NUMBER}" \
+            --name "Travis for a '${GITHUB_REF##*/}' branch #${GITHUB_RUN_NUMBER}" \
             --crawler https://brokencrystals.com/api/config https://brokencrystals.com/  \
             --repeater ${{ secrets.REPEATER }}                                            \
             --token ${{ secrets.NEXPLOIT_TOKEN }})
