@@ -12,7 +12,7 @@ test:
   - apt install curl -y
   script:
   - >
-    SCAN_ID=""
+    SCAN_ID="xej5sDeTAbabGQbbfjCoX7"
     GET_ID=$(curl -X 'GET' 'https://app.neuralegion.com/api/v1/scans/'$SCAN_ID'/issues' -H 'accept: application/json' -H    'Authorization:       Api-Key '$NEXPLOIT_TOKEN'' | jq '.[].id' )
       ISSUES_ID_ARRAY=$(sed -e 's/^"//' -e 's/"$//' <<<"$GET_ID")
       a=(); while read -r line; do a+=("$line"); done <<<"$ISSUES_ID_ARRAY"; declare a;
