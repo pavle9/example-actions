@@ -1,56 +1,55 @@
-# Use the latest 2.1 version of CircleCI pipeline process engine.
-# See: https://circleci.com/docs/2.0/configuration-reference
-version: 2.1
-
-# Define a job to be invoked later in a workflow.
-# See: https://circleci.com/docs/2.0/configuration-reference/#jobs
-jobs:
-  run-scan:
-    # Specify the execution environment. You can specify an image from Dockerhub or use one of our Convenience Images from CircleCI's Developer Hub.
-    # See: https://circleci.com/docs/2.0/configuration-reference/#docker-machine-macos-windows-executor
-    docker:
-      - image: ubuntu:20.04
-    # Add steps to the job
-    # See: https://circleci.com/docs/2.0/configuration-reference/#steps
-    steps:
-      - checkout
-      - run:
-          name: Install NodeJS and nexploit-cli
-          environment:
-            DEBIAN_FRONTEND: 'noninteractive'
-          command: |
-            apt -y update
-            apt-get -y install libnode-dev node-gyp libssl-dev
-            apt-get -y install nodejs npm
-            npm install -g @neuralegion/nexploit-cli --unsafe-perm=true
-      - run:
-          name: Start Nexploit Scan 🏁
-          command: |
-            SCAN_ID=$(nexploit-cli scan:run                                                 \
-            --test csrf dom_xss xss header_security secret_tokens open_buckets                 \
-            --name "💎 BrokenCrystals for CircleCI" \
-            --crawler https://brokencrystals.com/  \
-            --token $NEXPLOIT_TOKEN)
-            printf "Scan id is: $SCAN_ID"
-            echo "export SCAN_ID=\"$SCAN_ID\"" >> $BASH_ENV
-            
-      - run:
-          name: Output scan URL
-          command: |
-            printf "Scan was started with ID https://nexploit.app/scans/${SCAN_ID}"
-      - run:
-          name: Wait for issues ⏳
-          command: |
-            nexploit-cli scan:polling               \
-            --interval 30s                        \
-            --timeout 10m                         \
-            --token $NEXPLOIT_TOKEN               \
-            --breakpoint high_issue ${SCAN_ID}
-          
-            
-# Invoke jobs via workflows
-# See: https://circleci.com/docs/2.0/configuration-reference/#workflows
-workflows:
-  run-scan-workflow:
-    jobs:
-      - run-scan
+image: ubuntu:20.04
+cache:
+  paths:
+  - variables
+test:
+  before_script:
+  - apt update -qq --fix-missing
+  - apt install -y --no-install-recommends nodejs npm make g++
+  - npm install @NeuraLegion/nexploit-cli -g --unsafe-perm || true
+  - apt install jq -y
+  - apt install curl -y
+  script:
+  - >
+    SCAN_ID=""
+    GET_ID=$(curl -X 'GET' 'https://app.neuralegion.com/api/v1/scans/'$SCAN_ID'/issues' -H 'accept: application/json' -H    'Authorization:       Api-Key '$NEXPLOIT_TOKEN'' | jq '.[].id' )
+      ISSUES_ID_ARRAY=$(sed -e 's/^"//' -e 's/"$//' <<<"$GET_ID")
+      a=(); while read -r line; do a+=("$line"); done <<<"$ISSUES_ID_ARRAY"; declare a;
+                GET_NAME=$(curl -X 'GET' 'https://app.neuralegion.com/api/v1/scans/'$SCAN_ID'/issues' -H 'accept: application/json' -H 'Authorization: Api-Key '$NEXPLOIT_TOKEN'' | jq '.[].name' )
+                ISSUES_NAME_ARRAY=$(sed -e 's/^"//' -e 's/"$//' <<<"$GET_NAME")
+                b=(); while read -r line; do b+=("$line"); done <<<"$ISSUES_NAME_ARRAY"; declare b;
+                GET_DETAILS=$(curl -X 'GET' 'https://app.neuralegion.com/api/v1/scans/'$SCAN_ID'/issues' -H 'accept: application/json' -H 'Authorization: Api-Key '$NEXPLOIT_TOKEN'' | jq '.[].details' )
+                ISSUES_DETAILS_ARRAY=$(sed -e 's/^"//' -e 's/"$//' <<<"$GET_DETAILS")
+                c=(); while read -r line; do c+=("$line"); done <<<"$ISSUES_DETAILS_ARRAY"; declare c;
+                GET_SEVERITY=$(curl -X 'GET' 'https://app.neuralegion.com/api/v1/scans/'$SCAN_ID'/issues' -H 'accept: application/json' -H 'Authorization: Api-Key '$NEXPLOIT_TOKEN'' | jq '.[].severity' )
+                ISSUES_SEVERITY_ARRAY=$(sed -e 's/^"//' -e 's/"$//' <<<"$GET_SEVERITY")
+                d=(); while read -r line; do d+=("$line"); done <<<"$ISSUES_SEVERITY_ARRAY"; declare d;
+                GET_PROTOCOL=$(curl -X 'GET' 'https://app.neuralegion.com/api/v1/scans/'$SCAN_ID'/issues' -H 'accept: application/json' -H 'Authorization: Api-Key '$NEXPLOIT_TOKEN'' | jq '.[].protocol' )
+                ISSUES_PROTOCOL_ARRAY=$(sed -e 's/^"//' -e 's/"$//' <<<"$GET_PROTOCOL")
+                e=(); while read -r line; do e+=("$line"); done <<<"$ISSUES_PROTOCOL_ARRAY"; declare e;
+                GET_EXPOSURE=$(curl -X 'GET' 'https://app.neuralegion.com/api/v1/scans/'$SCAN_ID'/issues' -H 'accept: application/json' -H 'Authorization: Api-Key '$NEXPLOIT_TOKEN'' | jq '.[].exposure' )
+                ISSUES_EXPOSURE_ARRAY=$(sed -e 's/^"//' -e 's/"$//' <<<"$GET_EXPOSURE")
+                f=(); while read -r line; do f+=("$line"); done <<<"$ISSUES_EXPOSURE_ARRAY"; declare f;
+                GET_CVSS=$(curl -X 'GET' 'https://app.neuralegion.com/api/v1/scans/'$SCAN_ID'/issues' -H 'accept: application/json' -H 'Authorization: Api-Key '$NEXPLOIT_TOKEN'' | jq '.[].cvss' )
+                ISSUES_CVSS_ARRAY=$(sed -e 's/^"//' -e 's/"$//' <<<"$GET_CVSS")
+                g=(); while read -r line; do g+=("$line"); done <<<"$ISSUES_CVSS_ARRAY"; declare g;
+                GET_CWE=$(curl -X 'GET' 'https://app.neuralegion.com/api/v1/scans/'$SCAN_ID'/issues' -H 'accept: application/json' -H 'Authorization: Api-Key '$NEXPLOIT_TOKEN'' | jq '.[].cwe' )
+                ISSUES_CWE_ARRAY=$(sed -e 's/^"//' -e 's/"$//' <<<"$GET_CWE")
+                h=(); while read -r line; do h+=("$line"); done <<<"$ISSUES_CWE_ARRAY"; declare h;
+                GET_TIME=$(curl -X 'GET' 'https://app.neuralegion.com/api/v1/scans/'$SCAN_ID'/issues' -H 'accept: application/json' -H 'Authorization: Api-Key '$NEXPLOIT_TOKEN'' | jq '.[].time' )
+                ISSUES_TIME_ARRAY=$(sed -e 's/^"//' -e 's/"$//' <<<"$GET_TIME")
+                j=(); while read -r line; do i+=("$line"); done <<<"$ISSUES_TIME_ARRAY"; declare j;
+      echo "The size of string 'ISSUES_ID_ARRAY' is ${#a[*]}"
+      len=${#a[*]}
+      i=0
+      while [ $i -lt $len ]; do
+         echo "NAME    "${b[$i]}
+        echo "DETAILS    "${c[$i]}
+        echo "SEVERITY    "${d[$i]}
+        echo "PROTOCOL    "${e[$i]}
+        echo "EXPOSURE    "${f[$i]}
+        echo "CVSS    "${g[$i]}
+        echo "CWE    "${h[$i]}
+        echo "TIME    "${j[$i]}
+        let i=i+1
+      done
